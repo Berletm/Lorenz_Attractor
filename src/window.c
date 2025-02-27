@@ -1,24 +1,21 @@
 #include "window.h"
 #include "common.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
 
-static SDL_Window* window;
-static SDL_GLContext context;
-
-void init_window() {
+void init_window() 
+{
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("Lorenz Attractor", 
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+        width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     context = SDL_GL_CreateContext(window);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, (double)WIDTH / HEIGHT, 0.1, 300.0);
+    gluPerspective(fov, (double)width / height, 0.1, 300.0);
 }
 
-void deinit_window() {
+void deinit_window() 
+{
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -29,6 +26,13 @@ void update_camera()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    
+    camera_direction.x = cos(TO_RADIANS(yaw)) * cos(TO_RADIANS(pitch));
+    camera_direction.y = sin(TO_RADIANS(pitch));
+    camera_direction.z = sin(TO_RADIANS(yaw)) * cos(TO_RADIANS(pitch));
+
+    camera_target = vec3_add(camera_pos, camera_direction);
+
     gluLookAt(camera_pos.x, camera_pos.y, camera_pos.z,
               camera_target.x, camera_target.y, camera_target.z,
               camera_up.x, camera_up.y, camera_up.z);

@@ -6,90 +6,19 @@ bool left_mouse_button_down = false;
 int prev_mouse_x = 0;
 int prev_mouse_y = 0;
 
-void handle_input(SDL_Event* event) 
+void handle_input(SDL_Event* event)
 {
-    vec3D_t camera_direction;
-    camera_direction.x = camera_target.x - camera_pos.x;
-    camera_direction.y = camera_target.y - camera_pos.y;
-    camera_direction.z = camera_target.z - camera_pos.z;
-
-    double length = sqrt(camera_direction.x * camera_direction.x +
-                         camera_direction.y * camera_direction.y +
-                         camera_direction.z * camera_direction.z);
-    camera_direction.x /= length;
-    camera_direction.y /= length;
-    camera_direction.z /= length;
-
-    vec3D_t camera_right;
-    camera_right.x = camera_direction.y * camera_up.z - camera_direction.z * camera_up.y;
-    camera_right.y = camera_direction.z * camera_up.x - camera_direction.x * camera_up.z;
-    camera_right.z = camera_direction.x * camera_up.y - camera_direction.y * camera_up.x;
-
-    length = sqrt(camera_right.x * camera_right.x +
-                  camera_right.y * camera_right.y +
-                  camera_right.z * camera_right.z);
-    camera_right.x /= length;
-    camera_right.y /= length;
-    camera_right.z /= length;
-
-    vec3D_t camera_up_vector;
-    camera_up_vector.x = camera_right.y * camera_direction.z - camera_right.z * camera_direction.y;
-    camera_up_vector.y = camera_right.z * camera_direction.x - camera_right.x * camera_direction.z;
-    camera_up_vector.z = camera_right.x * camera_direction.y - camera_right.y * camera_direction.x;
-
     switch (event->type) {
         case SDL_KEYDOWN:
-            switch (event->key.keysym.sym) {
-                case SDLK_w:
-                    camera_pos.x += camera_direction.x * CAMERA_SPEED;
-                    camera_pos.y += camera_direction.y * CAMERA_SPEED;
-                    camera_pos.z += camera_direction.z * CAMERA_SPEED;
-                    camera_target.x += camera_direction.x * CAMERA_SPEED;
-                    camera_target.y += camera_direction.y * CAMERA_SPEED;
-                    camera_target.z += camera_direction.z * CAMERA_SPEED;
-                    break;
-                case SDLK_s:
-                    camera_pos.x -= camera_direction.x * CAMERA_SPEED;
-                    camera_pos.y -= camera_direction.y * CAMERA_SPEED;
-                    camera_pos.z -= camera_direction.z * CAMERA_SPEED;
-                    camera_target.x -= camera_direction.x * CAMERA_SPEED;
-                    camera_target.y -= camera_direction.y * CAMERA_SPEED;
-                    camera_target.z -= camera_direction.z * CAMERA_SPEED;
-                    break;
-                case SDLK_a:
-                    camera_pos.x -= camera_right.x * CAMERA_SPEED;
-                    camera_pos.y -= camera_right.y * CAMERA_SPEED;
-                    camera_pos.z -= camera_right.z * CAMERA_SPEED;
-                    camera_target.x -= camera_right.x * CAMERA_SPEED;
-                    camera_target.y -= camera_right.y * CAMERA_SPEED;
-                    camera_target.z -= camera_right.z * CAMERA_SPEED;
-                    break;
-                case SDLK_d:
-                    camera_pos.x += camera_right.x * CAMERA_SPEED;
-                    camera_pos.y += camera_right.y * CAMERA_SPEED;
-                    camera_pos.z += camera_right.z * CAMERA_SPEED;
-                    camera_target.x += camera_right.x * CAMERA_SPEED;
-                    camera_target.y += camera_right.y * CAMERA_SPEED;
-                    camera_target.z += camera_right.z * CAMERA_SPEED;
-                    break;
-                case SDLK_q:
-                    camera_pos.x += camera_up_vector.x * CAMERA_SPEED;
-                    camera_pos.y += camera_up_vector.y * CAMERA_SPEED;
-                    camera_pos.z += camera_up_vector.z * CAMERA_SPEED;
-                    camera_target.x += camera_up_vector.x * CAMERA_SPEED;
-                    camera_target.y += camera_up_vector.y * CAMERA_SPEED;
-                    camera_target.z += camera_up_vector.z * CAMERA_SPEED;
-                    break;
-                case SDLK_e:
-                    camera_pos.x -= camera_up_vector.x * CAMERA_SPEED;
-                    camera_pos.y -= camera_up_vector.y * CAMERA_SPEED;
-                    camera_pos.z -= camera_up_vector.z * CAMERA_SPEED;
-                    camera_target.x -= camera_up_vector.x * CAMERA_SPEED;
-                    camera_target.y -= camera_up_vector.y * CAMERA_SPEED;
-                    camera_target.z -= camera_up_vector.z * CAMERA_SPEED;
-                    break;
+            switch (event->key.keysym.sym) 
+            {
+                case SDLK_w: camera_pos = vec3_add(camera_pos, vec3_scale(camera_direction, CAMERA_SPEED)); break;
+                case SDLK_a: camera_pos = vec3_sub(camera_pos, vec3_scale(vec3_normalize(vec3_cross(camera_direction, camera_up)), CAMERA_SPEED)); break;
+                case SDLK_s: camera_pos = vec3_sub(camera_pos, vec3_scale(camera_direction, CAMERA_SPEED)); break;
+                case SDLK_d: camera_pos = vec3_add(camera_pos, vec3_scale(vec3_normalize(vec3_cross(camera_direction, camera_up)), CAMERA_SPEED)); break;
+                case SDLK_q: camera_pos = vec3_add(camera_pos, vec3_scale(camera_up, CAMERA_SPEED)); break;
+                case SDLK_e: camera_pos = vec3_sub(camera_pos, vec3_scale(camera_up, CAMERA_SPEED)); break;
             }
-            break;
         case SDL_MOUSEBUTTONDOWN:
             if (event->button.button == SDL_BUTTON_LEFT) {
                 left_mouse_button_down = true;
@@ -102,35 +31,44 @@ void handle_input(SDL_Event* event)
             }
             break;
         case SDL_MOUSEMOTION:
-        if (left_mouse_button_down) {
-            int deltaX = event->motion.x - prev_mouse_x;
-            int deltaY = event->motion.y - prev_mouse_y;
-            prev_mouse_x = event->motion.x;
-            prev_mouse_y = event->motion.y;
+            if (left_mouse_button_down) 
+            {
+                double delta_x = event->motion.xrel;
+                double delta_y = event->motion.yrel;
 
-            double angleY = deltaX * 0.0008f;
-            double cosY = cos(angleY);
-            double sinY = sin(angleY);
+                yaw += delta_x * SENSITIVITY;
+                pitch -= delta_y * SENSITIVITY;
+                
+                if (pitch > 89.0)
+                {
+                    pitch = 89.0;
+                }
+                if (pitch < -89.0)
+                {
+                    pitch = -89.0;
+                }
+            }
+            break;
+        case SDL_WINDOWEVENT:
+            if (event->window.event == SDL_WINDOWEVENT_RESIZED) {
+                int new_width = event->window.data1;
+                int new_height = event->window.data2;
 
-            vec3D_t dirY = {camera_target.x - camera_pos.x, camera_target.y - camera_pos.y, camera_target.z - camera_pos.z};
-            double newX = dirY.x * cosY - dirY.z * sinY;
-            double newZ = dirY.x * sinY + dirY.z * cosY;
+                glViewport(0, 0, new_width, new_height);
+            }
+            break;
+        case SDL_MOUSEWHEEL:
+            fov -= 5 * event->wheel.y;
 
-            camera_target.x = camera_pos.x + newX;
-            camera_target.z = camera_pos.z + newZ;
-
-            double angleX = -1.0 * deltaY * 0.0008f;
-            double cosX = cos(angleX);
-            double sinX = sin(angleX);
-
-            vec3D_t dirX = {camera_target.x - camera_pos.x, camera_target.y - camera_pos.y, camera_target.z - camera_pos.z};
-            double newY = dirX.y * cosX - dirX.z * sinX;
-            double newZ2 = dirX.y * sinX + dirX.z * cosX;
-
-            camera_target.y = camera_pos.y + newY;
-            camera_target.z = camera_pos.z + newZ2;
-        }
-        break;
+            if (fov < 5) fov = 5;
+            if (fov > 120) fov = 120;
+            
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            gluPerspective(fov, (double)width / height, 0.1, 300.0);
+            glMatrixMode(GL_MODELVIEW);
+            SDL_GL_SwapWindow(window);
+            break;
     }
 }
 
@@ -147,4 +85,3 @@ bool process_input()
     }
     return true;
 }
-

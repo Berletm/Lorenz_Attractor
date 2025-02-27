@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+#define EPSILON 1e-8
 
 void f_derrivative(vec3D_t* x, vec3D_t* fx, void* params) 
 {
@@ -102,8 +105,8 @@ void integrate(vec3D_t* x0, double T, double h, void (*f)(vec3D_t*, vec3D_t*, vo
     free(xh);
 }
 
-void integration_step(void (*method)(vec3D_t* x0, vec3D_t* xh, double h, 
-    void (*f)(vec3D_t*, vec3D_t*, void*), void* params), double dt)
+void integration_step(void (*method)(vec3D_t*, vec3D_t*, double, 
+    void (*f)(vec3D_t*, vec3D_t*, void*), void*), double dt)
 {
     points_buffer[buffer_index] = current_state;
     buffer_index = (buffer_index + 1) % BUFFER_SIZE;
@@ -114,3 +117,62 @@ void integration_step(void (*method)(vec3D_t* x0, vec3D_t* xh, double h,
     method(&current_state, &current_state, dt, f_derrivative, params);
 }
 
+void implicit_trapezoidal_step(vec3D_t* x0, vec3D_t* xh, double h, void (*f)(vec3D_t*, vec3D_t*, void*), void* params) {
+    vec3D_t fx, k1;
+
+    f(x0, &fx, params);
+    k1 = fx;
+
+    newton_approximation(x0, xh, h, f, params);
+
+    f(xh, &fx, params);
+
+    xh->x = x0->x + 0.5 * h * (k1.x + fx.x);
+    xh->y = x0->y + 0.5 * h * (k1.y + fx.y);
+    xh->z = x0->z + 0.5 * h * (k1.z + fx.z);
+}
+
+void newton_approximation(vec3D_t* x0, vec3D_t* xh_approximation, double h, void (*f)(vec3D_t*, vec3D_t*, void*), void* params) {
+    vec3D_t current_approximation = *x0;
+    vec3D_t next_approximation;
+    vec3D_t Fx, F_dotx;
+    vec3D_t delta;
+
+    do {
+        F(x0, &current_approximation, &Fx, h, f, params);
+        F_dot(&current_approximation, &F_dotx, h, params);
+
+        next_approximation.x = current_approximation.x - (Fx.x / F_dotx.x);
+        next_approximation.y = current_approximation.y - (Fx.y / F_dotx.y);
+        next_approximation.z = current_approximation.z - (Fx.z / F_dotx.z);
+
+        delta.x = next_approximation.x - current_approximation.x;
+        delta.y = next_approximation.y - current_approximation.y;
+        delta.z = next_approximation.z - current_approximation.z;
+
+        current_approximation = next_approximation;
+    } while (l2_mes(&delta) >= EPSILON);
+
+    *xh_approximation = current_approximation;
+}
+
+double l2_mes(vec3D_t* x) {
+    return sqrt(pow(x->x, 2) + pow(x->y, 2) + pow(x->z, 2));
+}
+
+void F(vec3D_t* x0, vec3D_t* xh, vec3D_t* Fx, double h, void (*f)(vec3D_t*, vec3D_t*, void*), void* params) {
+    vec3D_t fx, fxh;
+    f(x0, &fx, params);
+    f(xh, &fxh, params);
+
+    Fx->x = xh->x - x0->x - 0.5 * h * (fx.x + fxh.x);
+    Fx->y = xh->y - x0->y - 0.5 * h * (fx.y + fxh.y);
+    Fx->z = xh->z - x0->z - 0.5 * h * (fx.z + fxh.z);
+}
+
+void F_dot(vec3D_t* xh, vec3D_t* F_dotx, double h, void* params)
+{
+    F_dotx->x = 1 - 0.5f * h * (-((double*)params)[0]);
+    F_dotx->y = 1 - 0.5f * h * (-1);
+    F_dotx->z = 1 - 0.5f * h * (-((double*)params)[2]);
+}

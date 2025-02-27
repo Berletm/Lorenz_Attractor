@@ -1,8 +1,8 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <SDL2/SDL.h>
 #include <GL/glew.h>
+#include <GL/gl.h>
 
 void init_window();
 void deinit_window();

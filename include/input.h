@@ -2,6 +2,8 @@
 #define INPUT_H
 
 #include <SDL2/SDL.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <stdbool.h>
 
 bool process_input();
