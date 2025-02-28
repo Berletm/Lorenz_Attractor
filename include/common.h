@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 
 #define PI 3.14159265359
-#define TO_RADIANS(deg) ({deg * PI / 180.0;})
+#define TO_RADIANS(deg) ((deg) * PI / 180.0)
 
 #include <stdbool.h>
 

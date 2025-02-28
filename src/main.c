@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
         if(!process_input()) break;
         update_camera();
         draw();
-        integration_step(rk4_step, 0.001);
+        integration_step(implicit_trapezoidal_step, 0.001);
     }
     deinit_window();
     return 0;
