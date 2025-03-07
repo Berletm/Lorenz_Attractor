@@ -18,7 +18,7 @@ vec3D_t points_buffer[BUFFER_SIZE];
 int point_counter = 0;
 int buffer_index = 0;
 
-// params[0] = sigma, params[1] = rho, params[2] = betta
+// params[0] = sigma, params[1] = rho, params[2] = beta
 double params[3] = {10.0, 28.0, 8.0 / 3.0};
 
 vec3D_t vec3_add(vec3D_t a, vec3D_t b) 

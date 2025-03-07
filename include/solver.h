@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-void f_derrivative(vec3D_t* x, vec3D_t* fx, void* params);
+void f_derivative(vec3D_t* x, vec3D_t* fx, void* params);
 
 void euler_step(vec3D_t* x0, vec3D_t* xh, double h, 
     void (*f)(vec3D_t*, vec3D_t*, void*), void* params);

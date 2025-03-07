@@ -6,15 +6,15 @@
 
 #define EPSILON 1e-8
 
-void f_derrivative(vec3D_t* x, vec3D_t* fx, void* params) 
+void f_derivative(vec3D_t* x, vec3D_t* fx, void* params) 
 {
     double sigma = *(((double*)params) + 0);
     double rho = *(((double*)params) + 1);
-    double betta = *(((double*)params) + 2);
+    double beta = *(((double*)params) + 2);
 
     fx->x = sigma * (x->y - x->x);
     fx->y = x->x * (rho - x->z) - x->y;
-    fx->z = x->x * x->y - betta * x->z;
+    fx->z = x->x * x->y - beta * x->z;
 }
 
 void euler_step(vec3D_t* x0, vec3D_t* xh, double h, 
@@ -114,7 +114,7 @@ void integration_step(void (*method)(vec3D_t*, vec3D_t*, double,
         point_counter++;
     }
 
-    method(&current_state, &current_state, dt, f_derrivative, params);
+    method(&current_state, &current_state, dt, f_derivative, params);
 }
 
 void implicit_trapezoidal_step(vec3D_t* x0, vec3D_t* xh, double h, void (*f)(vec3D_t*, vec3D_t*, void*), void* params) {
